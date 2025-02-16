@@ -10,6 +10,9 @@ void waitUntilKeyPressed();
 
 void draw(Graphics graphics, int x, int y)
 {
+    SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
+    SDL_RenderClear(graphics.renderer);
+    SDL_SetRenderDrawColor(graphics.renderer, 0, 200, 250, 250);
     SDL_Rect hcn = {x, y, 50, 50};
     SDL_RenderDrawRect(graphics.renderer, &hcn);
     graphics.presentScene();
@@ -43,7 +46,6 @@ int main(int argc, char* argv[])
                 }
                 else if(e.key.keysym.scancode == SDL_SCANCODE_D)
                 {
-                    cout << "Down at D\n";
                     x += step;
                     draw(graphics, x, y);
                 }
@@ -59,7 +61,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        SDL_Delay(10);
+        SDL_Delay(5);
     }
     graphics.quit();
 }
