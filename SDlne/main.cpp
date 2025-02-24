@@ -1,8 +1,11 @@
 #include <iostream>
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #include <SDL.h>
 #include "defs.h"
 #include "graphics.h"
+
+#define SIZE 30
 
 using namespace std;
 
@@ -12,19 +15,23 @@ int main(int argc, char* argv[])
 {
     Graphics graphics;
     graphics.init();
-    SDL_Texture* background = graphics.loadTexture("bikiniBottom.jpg");
-    graphics.prepareScene(background);
-    graphics.presentScene();
-    waitUntilKeyPressed();
-    SDL_Texture* img = graphics.loadTexture("Spongebob.png");
-    graphics.renderTexture(img, 400, 300);
-    graphics.presentScene();
-    waitUntilKeyPressed();
 
-    SDL_DestroyTexture(background);
-    background = NULL;
-    SDL_DestroyTexture(img);
-    img = NULL;
+    Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
+    SDL_Event e;
+    bool quit = true;
+    while(quit)
+    {
+        if(SDL_PollEvent(&e) == 0) continue;
+        if(e.type == SDL_KEYDOWN)
+        {
+            switch(e.key.keysym.sym)
+            {
+                case SDLK_SPACE: graphics.playChunk(eatsound); break;
+                case SDLK_ESCAPE: quit = false; break;
+            }
+        }
+    }
+    //waitUntilKeyPressed();
     graphics.quit();
 }
 
