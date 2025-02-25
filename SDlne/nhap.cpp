@@ -1,7 +1,9 @@
 #include <iostream>
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #include <time.h>
 #include <vector>
+#include <cmath>
 #include <SDL.h>
 #include "defs.h"
 #include "graphics.h"
@@ -20,6 +22,7 @@ struct Snake
 {
     vector<SDL_Rect> node;
     string direction = "right";
+    SDL_Rect food = {600, 150, SIZE, SIZE};
 
     void initMap(Graphics graphics, SDL_Texture* imgmap)
     {
@@ -49,7 +52,7 @@ struct Snake
         }
         return true;
     }
-    void makeFood(Graphics graphics)
+    void makeIndexFood()
     {
         int x, y;
         do
@@ -57,11 +60,12 @@ struct Snake
             x = rand() % 28 + 1;
             y = rand() % 18 + 1;
         } while(!checkIndexOfFood(x, y));
-
-        SDL_Rect food = {x * SIZE, y * SIZE, SIZE, SIZE};
-        SDL_SetRenderDrawColor(graphics.renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(graphics.renderer, &food);
-        graphics.presentScene();
+        food.x = x * SIZE;
+        food.y = y * SIZE;
+    }
+    void renderFood(Graphics graphics, SDL_Texture* imgfood)
+    {
+        graphics.renderTexture(imgfood, food.x, food.y);
     }
     void render(Graphics graphics, SDL_Texture* imgdau, SDL_Texture* imgthan)
     {
@@ -78,6 +82,33 @@ struct Snake
             }
             else graphics.renderTexture(imgthan, node[i].x, node[i].y);
         }
+    }
+    bool ateFood()
+    {
+        int a = node[0].x + SIZE / 2;
+        int b = node[0].y + SIZE / 2;
+        int c = food.x + SIZE / 2;
+        int d = food.y + SIZE / 2;
+        double khoangcach = sqrt(pow(a - c, 2) + pow(b - d, 2));
+        return (khoangcach < SIZE);
+    }
+    void increaseSizeOfSnake()
+    {
+        node.resize(node.size() + 1);
+    }
+    bool isGameOver()
+    {
+
+        int a = node[0].x + SIZE / 2;
+        int b = node[0].y + SIZE / 2;
+        for(int i = 1; i < node.size(); i++)
+        {
+            int c = node[i].x + SIZE / 2;
+            int d = node[i].y + SIZE / 2;
+            if(sqrt(pow(a - c, 2) + pow(b - d, 2)) < SIZE)
+                    return true;
+        }
+        return false;
     }
     void move()
     {
@@ -122,14 +153,28 @@ int main(int argc, char* argv[])
     SDL_Texture* imgdau = graphics.loadTexture("dau.png");
     SDL_Texture* imgthan = graphics.loadTexture("than.png");
     SDL_Texture* imgmap = graphics.loadTexture("map.png");
+    SDL_Texture* imgfood = graphics.loadTexture("foodpixel.png");
+    Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
+    Mix_Music* nhacnen = graphics.loadMusic("backgroundmusic.mp3");
+    Mix_Chunk* gameoversound = graphics.loadSound("gameoversound.mp3");
+    graphics.playMusic(nhacnen);
+    Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
     Snake mySnake;
     mySnake.initMap(graphics, imgmap);
+    mySnake.renderFood(graphics, imgfood);
     mySnake.initSnake(graphics, imgdau, imgthan);
     SDL_Event e;
     bool check = true;
     bool ok = false;
+    int cnt = 0;
     while(check)
     {
+        if(mySnake.isGameOver())
+        {
+            graphics.playChunk(gameoversound);
+            SDL_Delay(3000);
+            break;
+        }
         if(SDL_PollEvent(&e) != 0)
             if(e.type == SDL_QUIT) break;
             if(e.type == SDL_KEYDOWN)
@@ -155,12 +200,18 @@ int main(int argc, char* argv[])
                 }
             }
         mySnake.initMap(graphics, imgmap);
+        mySnake.renderFood(graphics, imgfood);
+        if(mySnake.ateFood())
+        {
+            graphics.playChunk(eatsound);
+            mySnake.increaseSizeOfSnake();
+            mySnake.makeIndexFood();
+            mySnake.renderFood(graphics, imgfood);
+        }
         if(ok) mySnake.move();
-        SDL_Delay(200);
+        SDL_Delay(80);
         mySnake.render(graphics, imgdau, imgthan);
-        //mySnake.makeFood(graphics);
         graphics.presentScene();
-
     }
     graphics.quit();
 }

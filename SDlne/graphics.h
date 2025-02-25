@@ -122,7 +122,7 @@ struct Graphics {
         if (gMusic == nullptr) return;
 
         if (Mix_PlayingMusic() == 0) {
-            Mix_PlayMusic( gMusic, -1 );
+            Mix_PlayMusic(gMusic, -1);
         }
         else if( Mix_PausedMusic() == 1 ) {
             Mix_ResumeMusic();
@@ -138,7 +138,7 @@ struct Graphics {
     }
     void playChunk(Mix_Chunk* gChunk) {
         if (gChunk != nullptr) {
-            Mix_PlayChannel( -1, gChunk, 0 );
+            Mix_PlayChannel(-1, gChunk, 0);
         }
     }
 };

@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
     graphics.init();
 
     Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
+    Mix_Music* nhacnen = graphics.loadMusic("backgroundmusic.mp3");
     SDL_Event e;
     bool quit = true;
     while(quit)
@@ -24,7 +25,14 @@ int main(int argc, char* argv[])
         {
             switch(e.key.keysym.sym)
             {
-                case SDLK_SPACE: graphics.playChunk(eatsound); break;
+                case SDLK_SPACE:
+                    graphics.playChunk(eatsound);
+                    Mix_VolumeChunk(eatsound, MIX_MAX_VOLUME / 2);
+                    break;
+                case SDLK_m:
+                    graphics.playMusic(nhacnen);
+                    Mix_VolumeMusic(MIX_MAX_VOLUME / 4);
+                    break;
                 case SDLK_ESCAPE: quit = false; break;
             }
         }
