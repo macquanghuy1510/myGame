@@ -9,7 +9,7 @@
 using namespace std;
 
 #define SIZE 30
-#define INIT_LEN 3
+#define INIT_LEN 20
 
 int stepX = 0;
 int stepY = 0;

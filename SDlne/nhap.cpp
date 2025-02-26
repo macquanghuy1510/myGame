@@ -11,7 +11,7 @@
 using namespace std;
 
 #define SIZE 30
-#define INIT_LEN 20
+#define INIT_LEN 3
 
 int stepX = 0;
 int stepY = 0;
@@ -23,6 +23,7 @@ struct Snake
     vector<SDL_Rect> node;
     string direction = "right";
     SDL_Rect food = {600, 150, SIZE, SIZE};
+    double angle = 0;
 
     void initMap(Graphics graphics, SDL_Texture* imgmap)
     {
@@ -73,7 +74,6 @@ struct Snake
         {
             if(i == 0)
             {
-                double angle;
                 if(direction == "right") angle = 0;
                 else if(direction == "down") angle = 90;
                 else if(direction == "left") angle = 180;
@@ -98,7 +98,11 @@ struct Snake
     }
     bool isGameOver()
     {
-
+        if(node[0].y < 30 && angle == 270 ||
+           node[0].y + 30 > 570 && angle == 90 ||
+           node[0].x < 30 && angle == 180 ||
+           node[0].x + 30 > 870 && angle == 0)
+            return true;
         int a = node[0].x + SIZE / 2;
         int b = node[0].y + SIZE / 2;
         for(int i = 1; i < node.size(); i++)
@@ -172,6 +176,7 @@ int main(int argc, char* argv[])
         if(mySnake.isGameOver())
         {
             graphics.playChunk(gameoversound);
+            Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
             SDL_Delay(3000);
             break;
         }
