@@ -5,6 +5,7 @@
 #include <SDL.h>
 #include "defs.h"
 #include "graphics.h"
+#include "logicGame.h"
 
 using namespace std;
 

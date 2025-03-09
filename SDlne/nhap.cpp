@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <time.h>
 #include <vector>
 #include <cmath>
@@ -11,8 +12,8 @@
 using namespace std;
 
 #define SIZE 30
-#define INIT_LEN 3
-
+#define INIT_LEN 10
+#define STEP 30
 int stepX = 0;
 int stepY = 0;
 
@@ -24,7 +25,6 @@ struct Snake
     string direction = "right";
     SDL_Rect food = {600, 150, SIZE, SIZE};
     double angle = 0;
-
     void initMap(Graphics graphics, SDL_Texture* imgmap)
     {
         graphics.prepareScene(imgmap);
@@ -114,6 +114,25 @@ struct Snake
         }
         return false;
     }
+    void fixedMove()
+    {
+        if(angle == 0 && node[0].x % 10 == 5)
+        {
+            node[0].x += STEP;
+        }
+        else if(angle == 180 && node[0].x % 10 == 5)
+        {
+            node[0].x -= STEP;
+        }
+        else if(angle == 90 && node[0].y % 10 == 5)
+        {
+            node[0].y += STEP;
+        }
+        else if(angle == 270 && node[0].y % 10 == 5)
+        {
+            node[0].y -= STEP;
+        }
+    }
     void move()
     {
         for(int i = node.size() - 1; i >= 1; i--)
@@ -121,104 +140,198 @@ struct Snake
             node[i].x = node[i - 1].x;
             node[i].y = node[i - 1].y;
         }
+        SDL_Delay(50);
         node[0].x += stepX;
         node[0].y += stepY;
     }
     void turnleft()
     {
-        stepX = -SIZE;
+        stepX = -STEP;
         stepY = 0;
-        direction = "left";
+        if(node[0].y != node[1].y) direction = "left";
     }
     void turnright()
     {
-        stepX = SIZE;
+        stepX = STEP;
         stepY = 0;
-        direction = "right";
+        if(node[0].y != node[1].y) direction = "right";
     }
     void turnup()
     {
         stepX = 0;
-        stepY = -SIZE;
-        direction = "up";
+        stepY = -STEP;
+        if(node[0].x != node[1].x) direction = "up";
     }
     void turndown()
     {
         stepX = 0;
-        stepY = SIZE;
-        direction = "down";
+        stepY = STEP;
+        if(node[0].x != node[1].x) direction = "down";
+    }
+    bool clickToStart(Graphics graphics)
+    {
+        SDL_Rect hcn = {390, 260, 120, 80};
+        SDL_SetRenderDrawColor(graphics.renderer, 2, 119, 189, 255);
+        SDL_RenderFillRect(graphics.renderer, &hcn);
+        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 50);
+        SDL_Color color = {244, 255, 129, 255};
+        SDL_Texture* helloText = graphics.renderText("Play", font, color);
+        graphics.renderTexture(helloText, 390, 260);
+        graphics.presentScene();
+        SDL_Event e;
+        bool check = false;
+        bool quit = true;
+        int x, y;
+        while(quit)
+        {
+            if(SDL_PollEvent(&e))
+            {
+                SDL_GetMouseState(&x, &y);
+                switch(e.type)
+                {
+                    case SDL_MOUSEBUTTONDOWN:
+                        if(e.button.button == SDL_BUTTON_LEFT && x > 390 && x < 510 && y > 260 && y < 340)
+                        {
+                            check = true;
+                            quit = false;
+                            break;
+                        }
+                }
+            }
+        }
+        return check;
+    }
+    void playGame()
+    {
+        Graphics graphics;
+        graphics.init();
+        if(clickToStart(graphics))
+        {
+            SDL_Texture* imgdau = graphics.loadTexture("dau.png");
+            SDL_Texture* imgthan = graphics.loadTexture("than.png");
+            SDL_Texture* imgmap = graphics.loadTexture("map.png");
+            SDL_Texture* imgfood = graphics.loadTexture("foodpixel.png");
+            Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
+            Mix_Music* nhacnen = graphics.loadMusic("backgroundmusic.mp3");
+            Mix_Chunk* gameoversound = graphics.loadSound("gameoversound1.mp3");
+            graphics.playMusic(nhacnen);
+            Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
+            initMap(graphics, imgmap);
+            renderFood(graphics, imgfood);
+            initSnake(graphics, imgdau, imgthan);
+            SDL_Event e;
+            bool check = true;
+            bool ok = false;
+            int cnt = 0;
+            while(check)
+            {
+                if(isGameOver())
+                {
+                    graphics.playChunk(gameoversound);
+                    Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
+                    SDL_Delay(3500);
+                    break;
+                }
+                string newDirection = direction;
+                while(SDL_PollEvent(&e))
+                {
+                    if(e.type == SDL_QUIT) break;
+                    if(e.type == SDL_KEYDOWN)
+                    {
+                        switch(e.key.keysym.sym)
+                        {
+                            case SDLK_LEFT:
+                                if(direction != "right")
+                                    newDirection = "left"; ok = true; break;
+                            case SDLK_RIGHT:
+                                ok = true;
+                                if(direction != "left")
+                                    newDirection = "right"; ok = true; break;
+                            case SDLK_UP:
+                                ok = true;
+                                if(direction != "down")
+                                    newDirection = "up"; ok = true; break;
+                            case SDLK_DOWN:
+                                ok = true;
+                                if(direction != "up")
+                                    newDirection = "down"; ok = true; break;
+                            case SDLK_ESCAPE: check = false; break;
+                        }
+                    }
+                }
+                direction = newDirection;
+                if(direction == "left") turnleft();
+                else if(direction == "right") turnright();
+                else if(direction == "up") turnup();
+                else turndown();
+                initMap(graphics, imgmap);
+                renderFood(graphics, imgfood);
+                if(ateFood())
+                {
+                    graphics.playChunk(eatsound);
+                    increaseSizeOfSnake();
+                    makeIndexFood();
+                    renderFood(graphics, imgfood);
+                }
+                if(ok) move();
+                SDL_Delay(50);
+                render(graphics, imgdau, imgthan);
+                graphics.presentScene();
+            }
+        }
+        graphics.quit();
     }
 };
+
+bool askToPlayAgain(Graphics graphics)
+{
+    SDL_Rect hcn1 = {380, 250, 100, 50};
+    SDL_Rect hcn2 = {380, 350, 100, 50};
+    SDL_SetRenderDrawColor(graphics.renderer, 2, 119, 189, 255);
+    SDL_RenderFillRect(graphics.renderer, &hcn1);
+    SDL_RenderFillRect(graphics.renderer, &hcn2);
+    TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
+    SDL_Color color = {244, 255, 129, 255};
+    SDL_Texture* question = graphics.renderText("Do you want to play again?", font, color);
+    SDL_Texture* ansY = graphics.renderText("YES", font, color);
+    SDL_Texture* ansN = graphics.renderText("NO", font, color);
+    graphics.renderTexture(question, 200, 150);
+    graphics.renderTexture(ansY, 395, 250);
+    graphics.renderTexture(ansN, 400, 350);
+    graphics.presentScene();
+    int x, y;
+    SDL_Event eventchuot;
+    while(true)
+    {
+        SDL_PollEvent(&eventchuot);
+        SDL_GetMouseState(&x, &y);
+        if(eventchuot.type == SDL_QUIT)
+        {
+            break;
+        }
+        else if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
+        {
+            if(eventchuot.button.button == SDL_BUTTON_LEFT)
+            {
+                if(x > 380 && x < 480 && y > 250 && y < 300) return true;
+                if(x > 380 && x < 480 && y > 350 && y < 400) return false;
+            }
+        }
+        SDL_Delay(100);
+    }
+}
 
 int main(int argc, char* argv[])
 {
     Graphics graphics;
     graphics.init();
-    SDL_Texture* imgdau = graphics.loadTexture("dau.png");
-    SDL_Texture* imgthan = graphics.loadTexture("than.png");
-    SDL_Texture* imgmap = graphics.loadTexture("map.png");
-    SDL_Texture* imgfood = graphics.loadTexture("foodpixel.png");
-    Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
-    Mix_Music* nhacnen = graphics.loadMusic("backgroundmusic.mp3");
-    Mix_Chunk* gameoversound = graphics.loadSound("gameoversound.mp3");
-    graphics.playMusic(nhacnen);
-    Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
     Snake mySnake;
-    mySnake.initMap(graphics, imgmap);
-    mySnake.renderFood(graphics, imgfood);
-    mySnake.initSnake(graphics, imgdau, imgthan);
-    SDL_Event e;
-    bool check = true;
-    bool ok = false;
-    int cnt = 0;
-    while(check)
+    bool playAgain = false;
+    do
     {
-        if(mySnake.isGameOver())
-        {
-            graphics.playChunk(gameoversound);
-            Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
-            SDL_Delay(3000);
-            break;
-        }
-        if(SDL_PollEvent(&e) != 0)
-            if(e.type == SDL_QUIT) break;
-            if(e.type == SDL_KEYDOWN)
-            {
-                switch(e.key.keysym.sym)
-                {
-                    case SDLK_LEFT:
-                        if(mySnake.direction != "right")
-                            mySnake.turnleft(); break;
-                    case SDLK_RIGHT:
-                        ok = true;
-                        if(mySnake.direction != "left")
-                            mySnake.turnright(); break;
-                    case SDLK_UP:
-                        ok = true;
-                        if(mySnake.direction != "down")
-                            mySnake.turnup(); break;
-                    case SDLK_DOWN:
-                        ok = true;
-                        if(mySnake.direction != "up")
-                            mySnake.turndown(); break;
-                    case SDLK_ESCAPE: check = false; break;
-                }
-            }
-        mySnake.initMap(graphics, imgmap);
-        mySnake.renderFood(graphics, imgfood);
-        if(mySnake.ateFood())
-        {
-            graphics.playChunk(eatsound);
-            mySnake.increaseSizeOfSnake();
-            mySnake.makeIndexFood();
-            mySnake.renderFood(graphics, imgfood);
-        }
-        if(ok) mySnake.move();
-        SDL_Delay(80);
-        mySnake.render(graphics, imgdau, imgthan);
-        graphics.presentScene();
-    }
-    graphics.quit();
+        mySnake.playGame();
+        playAgain = askToPlayAgain(graphics);
+    } while(playAgain);
 }
 
 void waitUntilKeyPressed()

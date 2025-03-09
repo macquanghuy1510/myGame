@@ -3,6 +3,6 @@
 
 const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 600;
-const char* WINDOW_TITLE = "Hello World!";
+const char* WINDOW_TITLE = "Snake Game";
 
 #endif // _DEFS_H
