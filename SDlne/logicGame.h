@@ -12,6 +12,8 @@
 #include "defs.h"
 #include "graphics.h"
 
+#define SIZE 30
+
 struct Snake
 {
     vector<SDL_Rect> node;

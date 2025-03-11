@@ -1,24 +1,16 @@
-#include <iostream>
+#ifndef _LIBGAME_H
+#define _LIBGAME_H
+
+#include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
-#include <time.h>
 #include <vector>
 #include <cmath>
-#include <SDL.h>
-#include "defs.h"
 #include "graphics.h"
+#include "defs.h"
 
 using namespace std;
-
-#define SIZE 30
-#define INIT_LEN 3
-#define STEP 30
-int stepX = 0;
-int stepY = 0;
-
-void waitUntilKeyPressed();
-void waitUntilKeySpacePressed();
 
 struct Snake
 {
@@ -26,11 +18,19 @@ struct Snake
     string direction = "right";
     SDL_Rect food = {600, 150, SIZE, SIZE};
     double angle = 0;
-    void initMap(Graphics graphics, SDL_Texture* imgmap)
+    int stepX = 0;
+    int stepY = 0;
+    Graphics graphics;
+
+    Snake()
+    {
+        graphics.init();
+    }
+    void initMap(SDL_Texture* imgmap)
     {
         graphics.prepareScene(imgmap);
     }
-    void initSnake(Graphics graphics, SDL_Texture* imgdau, SDL_Texture* imgthan)
+    void initSnake(SDL_Texture* imgdau, SDL_Texture* imgthan)
     {
         node.resize(INIT_LEN);
         node[0] = {180, 150, SIZE, SIZE};
@@ -40,7 +40,7 @@ struct Snake
         }
         for(int i = 0; i < INIT_LEN; i++)
         {
-            if(i == 0) graphics.renderTexture(imgdau, node[i].x, node[i].y);
+            if(i == 0) graphics.rotateImage(imgdau, node[i].x, node[i].y, angle);
             else graphics.renderTexture(imgthan, node[i].x, node[i].y);
         }
         graphics.presentScene();
@@ -65,11 +65,11 @@ struct Snake
         food.x = x * SIZE;
         food.y = y * SIZE;
     }
-    void renderFood(Graphics graphics, SDL_Texture* imgfood)
+    void renderFood(SDL_Texture* imgfood)
     {
         graphics.renderTexture(imgfood, food.x, food.y);
     }
-    void render(Graphics graphics, SDL_Texture* imgdau, SDL_Texture* imgthan)
+    void render(SDL_Texture* imgdau, SDL_Texture* imgthan)
     {
         for(int i = 0; i < node.size(); i++)
         {
@@ -115,6 +115,20 @@ struct Snake
         }
         return false;
     }
+    void waitUntilKeySpacePressed()
+    {
+        SDL_Event e;
+        while (true) {
+            if ( SDL_PollEvent(&e) != 0 )
+            {
+                if(e.type == SDL_KEYDOWN)
+                {
+                    if(e.key.keysym.sym == SDLK_SPACE) return;
+                }
+            }
+            SDL_Delay(100);
+        }
+    }
     void move()
     {
         for(int i = node.size() - 1; i >= 1; i--)
@@ -130,27 +144,23 @@ struct Snake
     {
         stepX = -STEP;
         stepY = 0;
-        if(node[0].y != node[1].y) direction = "left";
     }
     void turnright()
     {
         stepX = STEP;
         stepY = 0;
-        if(node[0].y != node[1].y) direction = "right";
     }
     void turnup()
     {
         stepX = 0;
         stepY = -STEP;
-        if(node[0].x != node[1].x) direction = "up";
     }
     void turndown()
     {
         stepX = 0;
         stepY = STEP;
-        if(node[0].x != node[1].x) direction = "down";
     }
-    void menuGame(Graphics graphics)
+    void menuGame()
     {
         SDL_Rect hcn1 = {390, 160, 120, 80};
         SDL_Rect hcn2 = {280, 300, 350, 80};
@@ -165,7 +175,7 @@ struct Snake
         graphics.renderTexture(howtoplay, 280, 300);
         graphics.presentScene();
     }
-    bool clickToStart(Graphics graphics)
+    bool clickToStart()
     {
         SDL_Event e;
         bool check = false;
@@ -190,8 +200,10 @@ struct Snake
         }
         return check;
     }
-    bool askToPlayAgain(Graphics graphics)
+    bool askToPlayAgain()
     {
+        SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(graphics.renderer);
         SDL_Rect hcn1 = {380, 250, 100, 50};
         SDL_Rect hcn2 = {380, 350, 100, 50};
         SDL_SetRenderDrawColor(graphics.renderer, 2, 119, 189, 255);
@@ -227,12 +239,18 @@ struct Snake
             SDL_Delay(100);
         }
     }
+    void reset()
+    {
+        food.x = 600;
+        food.y = 150;
+        node[0].x = 180;
+        node[0].y = 150;
+        angle = 0;
+    }
     void playAGame()
     {
-        Graphics graphics;
-        graphics.init();
-        menuGame(graphics);
-        if(clickToStart(graphics))
+        menuGame();
+        if(clickToStart())
         {
             SDL_Texture* imgdau = graphics.loadTexture("dau.png");
             SDL_Texture* imgthan = graphics.loadTexture("than.png");
@@ -243,9 +261,9 @@ struct Snake
             Mix_Chunk* gameoversound = graphics.loadSound("gameoversound1.mp3");
             graphics.playMusic(nhacnen);
             Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
-            initMap(graphics, imgmap);
-            renderFood(graphics, imgfood);
-            initSnake(graphics, imgdau, imgthan);
+            initMap(imgmap);
+            renderFood(imgfood);
+            initSnake(imgdau, imgthan);
             SDL_Event e;
             bool check = true;
             bool ok = false;
@@ -254,10 +272,10 @@ struct Snake
             {
                 if(isGameOver())
                 {
-                    angle = 0;
                     graphics.playChunk(gameoversound);
                     Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                     SDL_Delay(4000);
+                    reset();
                     break;
                 }
                 string newDirection = direction;
@@ -306,22 +324,22 @@ struct Snake
                 else if(direction == "right") turnright();
                 else if(direction == "up") turnup();
                 else turndown();
-                initMap(graphics, imgmap);
-                renderFood(graphics, imgfood);
+                initMap(imgmap);
+                renderFood(imgfood);
                 if(ateFood())
                 {
                     graphics.playChunk(eatsound);
                     increaseSizeOfSnake();
                     makeIndexFood();
-                    renderFood(graphics, imgfood);
+                    renderFood(imgfood);
                 }
                 if(ok) move();
                 SDL_Delay(60);
-                render(graphics, imgdau, imgthan);
+                render(imgdau, imgthan);
                 graphics.presentScene();
             }
         }
-        graphics.quit();
+        //graphics.quit();
     }
     /*void playMoreAGame()
     {
@@ -335,34 +353,5 @@ struct Snake
     }*/
 };
 
-int main(int argc, char* argv[])
-{
-    Snake mySnake;
-    mySnake.playAGame();
-}
 
-void waitUntilKeyPressed()
-{
-    SDL_Event e;
-    while (true) {
-        if ( SDL_PollEvent(&e) != 0 &&
-             (e.type == SDL_KEYDOWN || e.type == SDL_QUIT) )
-            return;
-        SDL_Delay(100);
-    }
-}
-
-void waitUntilKeySpacePressed()
-{
-    SDL_Event e;
-    while (true) {
-        if ( SDL_PollEvent(&e) != 0 )
-        {
-            if(e.type == SDL_KEYDOWN)
-            {
-                if(e.key.keysym.sym == SDLK_SPACE) return;
-            }
-        }
-        SDL_Delay(100);
-    }
-}
+#endif // _LIBGAME_H
