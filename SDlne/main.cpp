@@ -11,10 +11,22 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     Snake mySnake;
-    bool check = false;
+    mySnake.menuGame();
     do
     {
-        mySnake.playAGame();
-        check = mySnake.askToPlayAgain();
-    } while(check);
+        if(mySnake.clickToKnowRule())
+        {
+            mySnake.renderRuleOfGame();
+            mySnake.waitUntilKeySpacePressed();
+            mySnake.menuGame();
+        }
+    } while(!mySnake.clickToStart());
+    bool ok = false;
+    bool start = false;
+    if(mySnake.clickToStart()) start = true;
+    do
+    {
+        if(start) mySnake.playAGame();
+        ok = mySnake.askToPlayAgain();
+    } while(ok);
 }
