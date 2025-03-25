@@ -12,21 +12,12 @@ int main(int argc, char* argv[])
 {
     Snake mySnake;
     mySnake.menuGame();
-    do
-    {
-        if(mySnake.clickToKnowRule())
-        {
-            mySnake.renderRuleOfGame();
-            mySnake.waitUntilKeySpacePressed();
-            mySnake.menuGame();
-        }
-    } while(!mySnake.clickToStart());
     bool ok = false;
-    bool start = false;
-    if(mySnake.clickToStart()) start = true;
+    bool check = false;
+    if(mySnake.clickToStart()) check = true;
     do
     {
-        if(start) mySnake.playAGame();
+        if(check) mySnake.playAGame();
         ok = mySnake.askToPlayAgain();
     } while(ok);
 }

@@ -70,7 +70,7 @@ struct Snake
     {
         graphics.renderTexture(imgfood, food.x, food.y);
     }
-    void render(SDL_Texture* imgdau, SDL_Texture* imgthan)
+    void renderSnake(SDL_Texture* imgdau, SDL_Texture* imgthan)
     {
         for(int i = 0; i < node.size(); i++)
         {
@@ -165,17 +165,14 @@ struct Snake
     {
         SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
         SDL_RenderClear(graphics.renderer);
-        SDL_Rect hcn1 = {390, 160, 120, 80};
-        SDL_Rect hcn2 = {270, 300, 400, 80};
-        SDL_SetRenderDrawColor(graphics.renderer, 2, 119, 189, 255);
-        SDL_RenderFillRect(graphics.renderer, &hcn1);
-        SDL_RenderFillRect(graphics.renderer, &hcn2);
-        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 50);
-        SDL_Color color = {244, 255, 129, 255};
-        SDL_Texture* play = graphics.renderText("Play", font, color);
-        SDL_Texture* howtoplay = graphics.renderText("How to play?", font, color);
-        graphics.renderTexture(play, 390, 160);
-        graphics.renderTexture(howtoplay, 280, 300);
+        SDL_Texture* background = graphics.loadTexture("background.jpg");
+        SDL_Texture* buttonstart = graphics.loadTexture("buttonstartgamethugon.PNG");
+        graphics.prepareScene(background);
+        graphics.renderTexture(buttonstart, 265, 200);
+        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 70);
+        SDL_Color color = {204, 49, 61, 255};
+        SDL_Texture* play = graphics.renderText("START", font, color);
+        graphics.renderTexture(play, 315, 245);
         graphics.presentScene();
     }
     void renderRuleOfGame()
@@ -238,7 +235,7 @@ struct Snake
                 switch(e.type)
                 {
                     case SDL_MOUSEBUTTONDOWN:
-                        if(e.button.button == SDL_BUTTON_LEFT && x > 390 && x < 510 && y > 160 && y < 240)
+                        if(e.button.button == SDL_BUTTON_LEFT && x > 265 && x < 634 && y > 200 && y < 391)
                         {
                             check = true;
                             quit = false;
@@ -253,19 +250,19 @@ struct Snake
     {
         SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
         SDL_RenderClear(graphics.renderer);
-        SDL_Rect hcn1 = {380, 250, 100, 50};
-        SDL_Rect hcn2 = {380, 350, 100, 50};
-        SDL_SetRenderDrawColor(graphics.renderer, 2, 119, 189, 255);
-        SDL_RenderFillRect(graphics.renderer, &hcn1);
-        SDL_RenderFillRect(graphics.renderer, &hcn2);
-        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
-        SDL_Color color = {244, 255, 129, 255};
+        SDL_Texture* background = graphics.loadTexture("background.jpg");
+        graphics.prepareScene(background);
+        SDL_Texture* button = graphics.loadTexture("buttonstartgame (1)thugon.PNG");
+        graphics.renderTexture(button, 340, 242);
+        graphics.renderTexture(button, 340, 382);
+        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 40);
+        SDL_Color color = {204, 49, 61, 255};
         SDL_Texture* question = graphics.renderText("Do you want to play again?", font, color);
         SDL_Texture* ansY = graphics.renderText("YES", font, color);
         SDL_Texture* ansN = graphics.renderText("NO", font, color);
-        graphics.renderTexture(question, 200, 150);
-        graphics.renderTexture(ansY, 395, 250);
-        graphics.renderTexture(ansN, 400, 350);
+        graphics.renderTexture(question, 130, 150);
+        graphics.renderTexture(ansY, 390, 260);
+        graphics.renderTexture(ansN, 400, 400);
         graphics.presentScene();
         int x, y;
         SDL_Event eventchuot;
@@ -281,8 +278,8 @@ struct Snake
             {
                 if(eventchuot.button.button == SDL_BUTTON_LEFT)
                 {
-                    if(x > 380 && x < 480 && y > 250 && y < 300) return true;
-                    if(x > 380 && x < 480 && y > 350 && y < 400) return false;
+                    if(x > 340 && x < 525 && y > 242 && y < 327) return true;
+                    if(x > 340 && x < 525 && y > 382 && y < 467) return false;
                 }
             }
             SDL_Delay(100);
@@ -316,8 +313,10 @@ struct Snake
         bool ok = false;
         while(check)
         {
+            Mix_PausedMusic();
             if(isGameOver())
             {
+                Mix_HaltMusic();
                 graphics.playChunk(gameoversound);
                 Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                 reset();
@@ -336,6 +335,7 @@ struct Snake
                             if(direction != "right")
                             {
                                 graphics.playChunk(switchsound);
+                                Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                                 newDirection = "left";
                                 ok = true;
                             }
@@ -344,6 +344,7 @@ struct Snake
                             if(direction != "left")
                             {
                                 graphics.playChunk(switchsound);
+                                Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                                 newDirection = "right";
                                 ok = true;
                             }
@@ -352,6 +353,7 @@ struct Snake
                             if(direction != "down")
                             {
                                 graphics.playChunk(switchsound);
+                                Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                                 newDirection = "up";
                                 ok = true;
                             }
@@ -360,6 +362,7 @@ struct Snake
                             if(direction != "up")
                             {
                                 graphics.playChunk(switchsound);
+                                Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
                                 newDirection = "down";
                                 ok = true;
                             }
@@ -385,7 +388,7 @@ struct Snake
             }
             if(ok) move();
             SDL_Delay(60);
-            render(imgdau, imgthan);
+            renderSnake(imgdau, imgthan);
             graphics.presentScene();
         }
     }
