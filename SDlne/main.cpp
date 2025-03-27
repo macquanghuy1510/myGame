@@ -20,4 +20,6 @@ int main(int argc, char* argv[])
         if(check) mySnake.playAGame();
         ok = mySnake.askToPlayAgain();
     } while(ok);
+
+    mySnake.destroyAll();
 }

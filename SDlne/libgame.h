@@ -19,9 +19,18 @@ struct Snake
     string direction = "right";
     SDL_Rect food = {600, 150, SIZE, SIZE};
     double angle = 0;
+    int scores = 0;
     int stepX = 0;
     int stepY = 0;
     Graphics graphics;
+    SDL_Texture* imgmap;
+    SDL_Texture* imgdau;
+    SDL_Texture* imgthan;
+    SDL_Texture* imgfood;
+    Mix_Chunk* eatsound;
+    Mix_Chunk* gameoversound;
+    Mix_Chunk* switchsound;
+    Mix_Music* nhacnen;
 
     Snake()
     {
@@ -29,14 +38,14 @@ struct Snake
     }
     void initMap()
     {
-        SDL_Texture* imgmap = graphics.loadTexture("map.png");
+        imgmap = graphics.loadTexture("map.png");
         graphics.prepareScene(imgmap);
         SDL_DestroyTexture(imgmap);
     }
     void initSnake()
     {
-        SDL_Texture* imgdau = graphics.loadTexture("dau.png");
-        SDL_Texture* imgthan = graphics.loadTexture("than.png");
+        imgdau = graphics.loadTexture("dau.png");
+        imgthan = graphics.loadTexture("than.png");
         node.resize(INIT_LEN);
         node[0] = {180, 150, SIZE, SIZE};
         for(int i = 1; i < INIT_LEN; i++)
@@ -74,14 +83,14 @@ struct Snake
     }
     void renderFood()
     {
-        SDL_Texture* imgfood = graphics.loadTexture("foodpixel.png");
+        imgfood = graphics.loadTexture("foodpixel.png");
         graphics.renderTexture(imgfood, food.x, food.y);
         SDL_DestroyTexture(imgfood);
     }
     void renderSnake()
     {
-        SDL_Texture* imgdau = graphics.loadTexture("dau.png");
-        SDL_Texture* imgthan = graphics.loadTexture("than.png");
+        imgdau = graphics.loadTexture("dau.png");
+        imgthan = graphics.loadTexture("than.png");
         for(int i = 0; i < node.size(); i++)
         {
             if(i == 0)
@@ -106,32 +115,61 @@ struct Snake
         double khoangcach = sqrt(pow(a - c, 2) + pow(b - d, 2));
         return (khoangcach < SIZE);
     }
+    void increaseScores()
+    {
+        scores += 1;
+    }
+    void convertIntToChar(char* tmp)
+    {
+        vector<int> nums;
+        while(scores)
+        {
+            nums.push_back(scores % 10);
+            scores /= 10;
+        }
+        int l = nums.size();
+        for(int i = l - 1; i >= 0; i--)
+        {
+            *(tmp + l - i - 1) = (nums[i] + '0');
+        }
+        *(tmp + l) = '\0';
+    }
+    void renderScores()
+    {
+        //SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
+        //SDL_RenderClear(graphics.renderer);
+        char tmp[] = "";
+        convertIntToChar(tmp);
+        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
+        SDL_Color color = {227, 180, 72, 255};
+        SDL_Texture* score = graphics.renderText(tmp, font, color);
+        graphics.renderTexture(score, 0, 0);
+        //graphics.presentScene();
+        TTF_CloseFont(font);
+        SDL_DestroyTexture(score);
+    }
     void soundWhenEatFood()
     {
-        Mix_Chunk* eatsound = graphics.loadSound("applebitesound.mp3");
+        eatsound = graphics.loadSound("applebitesound.mp3");
         graphics.playChunk(eatsound);
-        //Mix_FreeChunk(eatsound);
     }
     void soundWhenGameOver()
     {
-        Mix_Chunk* gameoversound = graphics.loadSound("gameoversound1.mp3");
+        gameoversound = graphics.loadSound("gameoversound1.mp3");
         graphics.playChunk(gameoversound);
         Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
-        Mix_FreeChunk(gameoversound);
     }
     void soundWhenSwitch()
     {
-        Mix_Chunk* switchsound = graphics.loadSound("soundswitch.wav");
+        switchsound = graphics.loadSound("soundswitch.wav");
         graphics.playChunk(switchsound);
         Mix_VolumeChunk(switchsound, MIX_MAX_VOLUME / 3);
-        Mix_FreeChunk(switchsound);
     }
     void backgroundMusic()
     {
-        Mix_Music* nhacnen = graphics.loadMusic("backgroundmusic.mp3");
+        nhacnen = graphics.loadMusic("backgroundmusic.mp3");
         graphics.playMusic(nhacnen);
         Mix_VolumeMusic(MIX_MAX_VOLUME / 5);
-        Mix_FreeMusic(nhacnen);
     }
     void increaseSizeOfSnake()
     {
@@ -297,12 +335,66 @@ struct Snake
         node[0].x = 180;
         node[0].y = 150;
         direction = "right";
+        scores = 0;
+    }
+    void logicOfMove(SDL_Event& e, string& newDirection, bool& ok, bool& check)
+    {
+        while(SDL_PollEvent(&e))
+        {
+            if(e.type == SDL_QUIT) break;
+            if(e.type == SDL_KEYDOWN)
+            {
+                switch(e.key.keysym.sym)
+                {
+                    case SDLK_LEFT:
+                        if(direction != "right")
+                        {
+                            soundWhenSwitch();
+                            newDirection = "left";
+                            ok = true;
+                        }
+                        break;
+                    case SDLK_RIGHT:
+                        if(direction != "left")
+                        {
+                            soundWhenSwitch();
+                            newDirection = "right";
+                            ok = true;
+                        }
+                        break;
+                    case SDLK_UP:
+                        if(direction != "down")
+                        {
+                            soundWhenSwitch();
+                            newDirection = "up";
+                            ok = true;
+                        }
+                        break;
+                    case SDLK_DOWN:
+                        if(direction != "up")
+                        {
+                            soundWhenSwitch();
+                            newDirection = "down";
+                            ok = true;
+                        }
+                        break;
+                    case SDLK_ESCAPE: check = false; break;
+                    case SDLK_SPACE: waitUntilKeySpacePressed(); break;
+                }
+            }
+        }
+        direction = newDirection;
+        if(direction == "left") turnleft();
+        else if(direction == "right") turnright();
+        else if(direction == "up") turnup();
+        else turndown();
     }
     void playAGame()
     {
         Mix_HaltMusic();
         initMap();
         renderFood();
+        renderScores();
         initSnake();
         SDL_Event e;
         bool check = true;
@@ -317,69 +409,35 @@ struct Snake
                 break;
             }
             string newDirection = direction;
-            while(SDL_PollEvent(&e))
-            {
-                if(e.type == SDL_QUIT) break;
-                if(e.type == SDL_KEYDOWN)
-                {
-                    switch(e.key.keysym.sym)
-                    {
-                        case SDLK_LEFT:
-                            if(direction != "right")
-                            {
-                                soundWhenSwitch();
-                                newDirection = "left";
-                                ok = true;
-                            }
-                            break;
-                        case SDLK_RIGHT:
-                            if(direction != "left")
-                            {
-                                soundWhenSwitch();
-                                newDirection = "right";
-                                ok = true;
-                            }
-                            break;
-                        case SDLK_UP:
-                            if(direction != "down")
-                            {
-                                soundWhenSwitch();
-                                newDirection = "up";
-                                ok = true;
-                            }
-                            break;
-                        case SDLK_DOWN:
-                            if(direction != "up")
-                            {
-                                soundWhenSwitch();
-                                newDirection = "down";
-                                ok = true;
-                            }
-                            break;
-                        case SDLK_ESCAPE: check = false; break;
-                        case SDLK_SPACE: waitUntilKeySpacePressed(); break;
-                    }
-                }
-            }
-            direction = newDirection;
-            if(direction == "left") turnleft();
-            else if(direction == "right") turnright();
-            else if(direction == "up") turnup();
-            else turndown();
+            logicOfMove(e, newDirection, ok, check);
             initMap();
             renderFood();
             if(ateFood())
             {
+                increaseScores();
                 soundWhenEatFood();
                 increaseSizeOfSnake();
                 makeIndexFood();
                 renderFood();
+                renderScores();
             }
             if(ok) move();
             SDL_Delay(60);
             renderSnake();
             graphics.presentScene();
         }
+    }
+    void destroyAll()
+    {
+        Mix_FreeMusic(nhacnen);
+        Mix_FreeChunk(eatsound);
+        Mix_FreeChunk(gameoversound);
+        Mix_FreeChunk(switchsound);
+        SDL_DestroyTexture(imgdau);
+        SDL_DestroyTexture(imgthan);
+        SDL_DestroyTexture(imgfood);
+        SDL_DestroyTexture(imgmap);
+        graphics.quit();
     }
 };
 
