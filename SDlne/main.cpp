@@ -11,6 +11,8 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     Snake mySnake;
+    mySnake.graphics.init();
+    mySnake.loadAllTexture();
     mySnake.menuGame();
     bool ok = false;
     bool check = false;
@@ -21,5 +23,6 @@ int main(int argc, char* argv[])
         ok = mySnake.askToPlayAgain();
     } while(ok);
 
-    mySnake.destroyAll();
+    mySnake.destroyAllTexture();
+    mySnake.graphics.quit();
 }

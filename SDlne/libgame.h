@@ -32,20 +32,23 @@ struct Snake
     Mix_Chunk* switchsound;
     Mix_Music* nhacnen;
 
-    Snake()
+    void loadAllTexture()
     {
-        graphics.init();
+        imgmap = graphics.loadTexture("map.png");
+        imgdau = graphics.loadTexture("dau.png");
+        imgthan = graphics.loadTexture("than.png");
+        imgfood = graphics.loadTexture("foodpixel.png");
+        eatsound = graphics.loadSound("applebitesound.mp3");
+        gameoversound = graphics.loadSound("gameoversound1.mp3");
+        switchsound = graphics.loadSound("soundswitch.wav");
+        nhacnen = graphics.loadMusic("backgroundmusic.mp3");
     }
     void initMap()
     {
-        imgmap = graphics.loadTexture("map.png");
         graphics.prepareScene(imgmap);
-        SDL_DestroyTexture(imgmap);
     }
     void initSnake()
     {
-        imgdau = graphics.loadTexture("dau.png");
-        imgthan = graphics.loadTexture("than.png");
         node.resize(INIT_LEN);
         node[0] = {180, 150, SIZE, SIZE};
         for(int i = 1; i < INIT_LEN; i++)
@@ -58,8 +61,6 @@ struct Snake
             else graphics.renderTexture(imgthan, node[i].x, node[i].y);
         }
         graphics.presentScene();
-        SDL_DestroyTexture(imgdau);
-        SDL_DestroyTexture(imgthan);
     }
     bool checkIndexOfFood(int x, int y)
     {
@@ -83,14 +84,10 @@ struct Snake
     }
     void renderFood()
     {
-        imgfood = graphics.loadTexture("foodpixel.png");
         graphics.renderTexture(imgfood, food.x, food.y);
-        SDL_DestroyTexture(imgfood);
     }
     void renderSnake()
     {
-        imgdau = graphics.loadTexture("dau.png");
-        imgthan = graphics.loadTexture("than.png");
         for(int i = 0; i < node.size(); i++)
         {
             if(i == 0)
@@ -103,8 +100,6 @@ struct Snake
             }
             else graphics.renderTexture(imgthan, node[i].x, node[i].y);
         }
-        SDL_DestroyTexture(imgdau);
-        SDL_DestroyTexture(imgthan);
     }
     bool ateFood()
     {
@@ -115,17 +110,14 @@ struct Snake
         double khoangcach = sqrt(pow(a - c, 2) + pow(b - d, 2));
         return (khoangcach < SIZE);
     }
-    void increaseScores()
-    {
-        scores += 1;
-    }
     void convertIntToChar(char* tmp)
     {
+        int n = scores;
         vector<int> nums;
-        while(scores)
+        while(n)
         {
-            nums.push_back(scores % 10);
-            scores /= 10;
+            nums.push_back(n % 10);
+            n /= 10;
         }
         int l = nums.size();
         for(int i = l - 1; i >= 0; i--)
@@ -136,38 +128,31 @@ struct Snake
     }
     void renderScores()
     {
-        //SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
-        //SDL_RenderClear(graphics.renderer);
-        char tmp[] = "";
-        convertIntToChar(tmp);
+        char tmp[] = "0";
+        if(scores) convertIntToChar(tmp);
         TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
         SDL_Color color = {227, 180, 72, 255};
         SDL_Texture* score = graphics.renderText(tmp, font, color);
-        graphics.renderTexture(score, 0, 0);
-        //graphics.presentScene();
+        graphics.renderTexture(score, 0, -8);
         TTF_CloseFont(font);
         SDL_DestroyTexture(score);
     }
     void soundWhenEatFood()
     {
-        eatsound = graphics.loadSound("applebitesound.mp3");
         graphics.playChunk(eatsound);
     }
     void soundWhenGameOver()
     {
-        gameoversound = graphics.loadSound("gameoversound1.mp3");
         graphics.playChunk(gameoversound);
         Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
     }
     void soundWhenSwitch()
     {
-        switchsound = graphics.loadSound("soundswitch.wav");
         graphics.playChunk(switchsound);
-        Mix_VolumeChunk(switchsound, MIX_MAX_VOLUME / 3);
+        Mix_VolumeChunk(switchsound, MIX_MAX_VOLUME / 5);
     }
     void backgroundMusic()
     {
-        nhacnen = graphics.loadMusic("backgroundmusic.mp3");
         graphics.playMusic(nhacnen);
         Mix_VolumeMusic(MIX_MAX_VOLUME / 5);
     }
@@ -412,14 +397,14 @@ struct Snake
             logicOfMove(e, newDirection, ok, check);
             initMap();
             renderFood();
+            renderScores();
             if(ateFood())
             {
-                increaseScores();
+                scores++;
                 soundWhenEatFood();
                 increaseSizeOfSnake();
                 makeIndexFood();
                 renderFood();
-                renderScores();
             }
             if(ok) move();
             SDL_Delay(60);
@@ -427,7 +412,7 @@ struct Snake
             graphics.presentScene();
         }
     }
-    void destroyAll()
+    void destroyAllTexture()
     {
         Mix_FreeMusic(nhacnen);
         Mix_FreeChunk(eatsound);
@@ -437,7 +422,6 @@ struct Snake
         SDL_DestroyTexture(imgthan);
         SDL_DestroyTexture(imgfood);
         SDL_DestroyTexture(imgmap);
-        graphics.quit();
     }
 };
 
