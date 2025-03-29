@@ -6,6 +6,7 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <cstring>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include "graphics.h"
@@ -110,32 +111,42 @@ struct Snake
         double khoangcach = sqrt(pow(a - c, 2) + pow(b - d, 2));
         return (khoangcach < SIZE);
     }
-    void convertIntToChar(char* tmp)
+    void convertIntToChar(char* tmp, int n)
     {
-        int n = scores;
-        vector<int> nums;
-        while(n)
+        if(!n)
         {
-            nums.push_back(n % 10);
-            n /= 10;
+            *(tmp) = '0';
+            *(tmp + 1) = '\0';
         }
-        int l = nums.size();
-        for(int i = l - 1; i >= 0; i--)
+        else
         {
-            *(tmp + l - i - 1) = (nums[i] + '0');
+            vector<int> nums;
+            while(n)
+            {
+                nums.push_back(n % 10);
+                n /= 10;
+            }
+            int l = nums.size();
+            for(int i = l - 1; i >= 0; i--)
+            {
+                *(tmp + l - i - 1) = (nums[i] + '0');
+            }
+            *(tmp + l) = '\0';
         }
-        *(tmp + l) = '\0';
     }
     void renderScores()
     {
-        char tmp[] = "0";
-        if(scores) convertIntToChar(tmp);
+        char tmp1[] = "0";
+        convertIntToChar(tmp1, scores);
         TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
         SDL_Color color = {227, 180, 72, 255};
-        SDL_Texture* score = graphics.renderText(tmp, font, color);
-        graphics.renderTexture(score, 0, -8);
+        SDL_Texture* score = graphics.renderText(tmp1, font, color);
+        SDL_Texture* SCORES = graphics.renderText("Scores: ", font, color);
+        graphics.renderTexture(SCORES, 0, -8);
+        graphics.renderTexture(score, 145, -8);
         TTF_CloseFont(font);
         SDL_DestroyTexture(score);
+        SDL_DestroyTexture(SCORES);
     }
     void soundWhenEatFood()
     {
@@ -145,11 +156,23 @@ struct Snake
     {
         graphics.playChunk(gameoversound);
         Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
+        SDL_Delay(4000);
     }
     void soundWhenSwitch()
     {
         graphics.playChunk(switchsound);
         Mix_VolumeChunk(switchsound, MIX_MAX_VOLUME / 5);
+    }
+    void soundWhenNewRecord()
+    {
+        SDL_Texture* congra = graphics.loadTexture("newrecord.jpg");
+        Mix_Chunk* soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
+        graphics.prepareScene(congra);
+        graphics.presentScene();
+        graphics.playChunk(soundcongra);
+        SDL_Delay(6000);
+        SDL_DestroyTexture(congra);
+        Mix_FreeChunk(soundcongra);
     }
     void backgroundMusic()
     {
@@ -177,6 +200,47 @@ struct Snake
                     return true;
         }
         return false;
+    }
+    bool changeRecord()
+    {
+        bool check = false;
+        fstream myfile;
+        myfile.open("data.txt", ios::in | ios::out);
+        int record[3] = {0};
+        for(int i = 0; i < 3; i++)
+        {
+            myfile >> record[i];
+        }
+        if(scores > record[0])
+        {
+            record[2] = record[1];
+            record[1] = record[0];
+            record[0] = scores;
+            check = true;
+        }
+        else if(scores > record[1])
+        {
+            record[2] = record[1];
+            record[1] = scores;
+            check= true;
+        }
+        else if(scores > record[2])
+        {
+            record[2] = scores;
+            check = true;
+        }
+        for(int i : record) cout << i << ' ';
+        cout << endl;
+        myfile.close();
+        myfile.open("data.txt", ios::out | ios::trunc);
+        char c = ' ';
+        for(int i = 0; i < 3; i++)
+        {
+            myfile << record[i];
+            myfile << c;
+        }
+        myfile.close();
+        return check;
     }
     void waitUntilKeySpacePressed()
     {
@@ -389,8 +453,11 @@ struct Snake
             if(isGameOver())
             {
                 soundWhenGameOver();
+                if(changeRecord())
+                {
+                    soundWhenNewRecord();
+                }
                 reset();
-                SDL_Delay(4000);
                 break;
             }
             string newDirection = direction;

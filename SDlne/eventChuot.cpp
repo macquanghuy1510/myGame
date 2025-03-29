@@ -57,36 +57,15 @@ bool click()
     return false;
 }
 
-void change(int n, char* tmp)
-{
-    vector<int> nums;
-    while(n)
-    {
-        nums.push_back(n % 10);
-        n /= 10;
-    }
-    int l = nums.size();
-    for(int i = l - 1; i >= 0; i--)
-    {
-        *(tmp + l - i - 1) = (nums[i] + '0');
-    }
-    *(tmp + l) = '\0';
-}
-
 int main(int argc, char* argv[])
 {
     Graphics graphics;
     graphics.init();
-    TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 30);
-    SDL_Color color = {204, 49, 61, 255};
-    int n = 1243;
-    char tmp[] = "abcdef";
-    change(n, tmp);
-    SDL_Texture* question = graphics.renderText(tmp, font, color);
-    graphics.renderTexture(question, 200, 300);
+    SDL_Texture* img = graphics.loadTexture("congratulation.jpg");
+    graphics.prepareScene(img);
     graphics.presentScene();
     waitUntilKeyPressed();
-    SDL_Event eventchuot;
+    /*SDL_Event eventchuot;
     int x, y;
     while(true)
     {
@@ -103,7 +82,7 @@ int main(int argc, char* argv[])
                 if(click()) draw(graphics);
             }
         }
-    }
+    }*/
     graphics.quit();
     return 0;
 }
