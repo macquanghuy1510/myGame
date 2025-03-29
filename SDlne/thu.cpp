@@ -8,37 +8,44 @@ int main()
 {
     fstream myfile;
     myfile.open("data.txt", ios::in | ios::out);
-    int score[3];
+    int record[3];
     for(int i = 0; i < 3; i++)
     {
-        myfile >> score[i];
+        myfile >> record[i];
     }
-    for(int i : score) cout << i << ' ';
-    cout << endl;
-    int n;
-    cin >> n;
-    if(n > score[0])
+    if(scores > record[0])
     {
-        score[2] = score[1];
-        score[1] = score[0];
-        score[0] = n;
+        record[2] = record[1];
+        record[1] = record[0];
+        record[0] = n;
     }
-    else if(n > score[1])
+    else if(scores > record[1])
     {
-        score[2] = score[1];
-        score[1] = n;
+        record[2] = record[1];
+        record[1] = scores;
     }
-    else if(n > score[2])
+    else if(scores > record[2])
     {
-        score[2] = n;
+        record[2] = scores;
     }
     myfile.close();
     myfile.open("data.txt", ios::out | ios::trunc);
     char c = ' ';
     for(int i = 0; i < 3; i++)
     {
-        myfile << score[i];
+        myfile << record[i];
         myfile << c;
     }
     myfile.close();
+    /*void newRecord()
+    {
+        SDL_Texture* congra = graphics.loadTexture("newrecord.jpg");
+        Mix_Chunk* soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
+        graphics.prepareScene(congra);
+        graphics.presentScene();
+        graphics.playChunk(soundcongra);
+        SDL_Delay(6000);
+        SDL_DestroyTexture(congra);
+        Mix_FreeChunk(soundcongra);
+    }*/
 }

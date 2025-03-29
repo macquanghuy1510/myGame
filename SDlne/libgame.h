@@ -165,7 +165,7 @@ struct Snake
     }
     void soundWhenNewRecord()
     {
-        SDL_Texture* congra = graphics.loadTexture("newrecord.jpg");
+        SDL_Texture* congra = graphics.loadTexture("NEW RECORD.png");
         Mix_Chunk* soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
         graphics.prepareScene(congra);
         graphics.presentScene();
