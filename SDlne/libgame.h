@@ -28,6 +28,9 @@ struct Snake
     SDL_Texture* imgdau;
     SDL_Texture* imgthan;
     SDL_Texture* imgfood;
+    SDL_Texture* menu;
+    SDL_Texture* rulegame;
+    SDL_Texture* topscore;
     Mix_Chunk* eatsound;
     Mix_Chunk* gameoversound;
     Mix_Chunk* switchsound;
@@ -39,6 +42,9 @@ struct Snake
         imgdau = graphics.loadTexture("dau.png");
         imgthan = graphics.loadTexture("than.png");
         imgfood = graphics.loadTexture("foodpixel.png");
+        menu = graphics.loadTexture("START.png");
+        rulegame = graphics.loadTexture("RuleGame.png");
+        topscore = graphics.loadTexture("TopScore.png");
         eatsound = graphics.loadSound("applebitesound.mp3");
         gameoversound = graphics.loadSound("gameoversound1.mp3");
         switchsound = graphics.loadSound("soundswitch.wav");
@@ -101,6 +107,33 @@ struct Snake
             }
             else graphics.renderTexture(imgthan, node[i].x, node[i].y);
         }
+    }
+    void renderRule()
+    {
+        graphics.prepareScene(rulegame);
+        graphics.presentScene();
+    }
+    void renderTopScore()
+    {
+        graphics.prepareScene(topscore);
+        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 50);
+        SDL_Color color = {59, 106, 167, 255};
+        fstream myfile;
+        myfile.open("data.txt", ios::in);
+        int nums[3];
+        for(int i = 0; i < 3; i++) myfile >> nums[i];
+        myfile.close();
+        int d = 0;
+        for(int i = 0; i < 3; i++)
+        {
+            char tmp[] = "0";
+            convertIntToChar(tmp, nums[i]);
+            SDL_Texture* score = graphics.renderText(tmp, font, color);
+            graphics.renderTexture(score, 380, 190 + d);
+            d += 73;
+        }
+        graphics.presentScene();
+        TTF_CloseFont(font);
     }
     bool ateFood()
     {
@@ -165,7 +198,7 @@ struct Snake
     }
     void soundWhenNewRecord()
     {
-        SDL_Texture* congra = graphics.loadTexture("NEW RECORD.png");
+        SDL_Texture* congra = graphics.loadTexture("congratulations.png");
         Mix_Chunk* soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
         graphics.prepareScene(congra);
         graphics.presentScene();
@@ -218,13 +251,13 @@ struct Snake
             record[0] = scores;
             check = true;
         }
-        else if(scores > record[1])
+        else if(scores > record[1] && scores != record[0])
         {
             record[2] = record[1];
             record[1] = scores;
             check= true;
         }
-        else if(scores > record[2])
+        else if(scores > record[2] && scores != record[1])
         {
             record[2] = scores;
             check = true;
@@ -290,21 +323,52 @@ struct Snake
     void menuGame()
     {
         backgroundMusic();
-        SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
-        SDL_RenderClear(graphics.renderer);
-        SDL_Texture* background = graphics.loadTexture("background.jpg");
-        SDL_Texture* buttonstart = graphics.loadTexture("buttonstartgamethugon.PNG");
-        graphics.prepareScene(background);
-        graphics.renderTexture(buttonstart, 265, 200);
-        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 70);
-        SDL_Color color = {204, 49, 61, 255};
-        SDL_Texture* play = graphics.renderText("START", font, color);
-        graphics.renderTexture(play, 315, 245);
+        graphics.prepareScene(menu);
         graphics.presentScene();
-        SDL_DestroyTexture(background);
-        SDL_DestroyTexture(buttonstart);
-        SDL_DestroyTexture(play);
-        TTF_CloseFont(font);
+    }
+    int clickMouseEvent(int x, int y)
+    {
+        if(x > 325 && x < 579 && y > 66 && y < 166) return 0;
+        if(x > 220 && x < 695 && y > 238 && y < 338) return 1;
+        if(x > 180 && x < 730 && y > 411 && y < 511) return 2;
+    }
+    bool clickOnBack1()
+    {
+        int x, y;
+        SDL_Event eventchuot;
+        while(true)
+        {
+            SDL_PollEvent(&eventchuot);
+            SDL_GetMouseState(&x, &y);
+            if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if(eventchuot.button.button == SDL_BUTTON_LEFT)
+                {
+                    if(x > 180 && x < 420 && y > 473 && y < 573) return true;
+                }
+            }
+            SDL_Delay(100);
+        }
+        return false;
+    }
+    bool clickOnBack2()
+    {
+        int x, y;
+        SDL_Event eventchuot;
+        while(true)
+        {
+            SDL_PollEvent(&eventchuot);
+            SDL_GetMouseState(&x, &y);
+            if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if(eventchuot.button.button == SDL_BUTTON_LEFT)
+                {
+                    if(x > 469 && x < 709 && y > 465 && y < 565) return true;
+                }
+            }
+            SDL_Delay(100);
+        }
+        return false;
     }
     bool clickToStart()
     {
@@ -438,7 +502,7 @@ struct Snake
         else if(direction == "up") turnup();
         else turndown();
     }
-    void playAGame()
+    void playGame()
     {
         Mix_HaltMusic();
         initMap();
@@ -489,6 +553,9 @@ struct Snake
         SDL_DestroyTexture(imgthan);
         SDL_DestroyTexture(imgfood);
         SDL_DestroyTexture(imgmap);
+        SDL_DestroyTexture(menu);
+        SDL_DestroyTexture(rulegame);
+        SDL_DestroyTexture(topscore);
     }
 };
 

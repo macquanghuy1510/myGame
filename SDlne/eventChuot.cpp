@@ -5,33 +5,11 @@
 #include <SDL.h>
 #include "defs.h"
 #include "graphics.h"
+#include "libgame.h"
 
 using namespace std;
 
 void waitUntilKeyPressed();
-
-void picture(Graphics graphics)
-{
-    SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
-    SDL_RenderClear(graphics.renderer);
-    SDL_Texture* img = graphics.loadTexture("map.png");
-    graphics.prepareScene(img);
-    SDL_Texture* button = graphics.loadTexture("buttonstartgame (1)thugon.PNG");
-    graphics.renderTexture(button, 450, 300);
-    graphics.presentScene();
-    SDL_DestroyTexture(img);
-    SDL_DestroyTexture(button);
-}
-
-void draw(Graphics graphics)
-{
-    SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
-    SDL_RenderClear(graphics.renderer);
-    SDL_Texture* img = graphics.loadTexture("bikiniBottom.jpg");
-    graphics.renderTexture(img, 300, 300);
-    graphics.presentScene();
-    SDL_DestroyTexture(img);
-}
 
 int clickMouseEvent(int x, int y)
 {
@@ -47,7 +25,6 @@ bool clickOnBack1()
     {
         SDL_PollEvent(&eventchuot);
         SDL_GetMouseState(&x, &y);
-        //cout << x << ' ' << y << endl;
         if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
         {
             if(eventchuot.button.button == SDL_BUTTON_LEFT)
@@ -67,7 +44,6 @@ bool clickOnBack2()
     {
         SDL_PollEvent(&eventchuot);
         SDL_GetMouseState(&x, &y);
-        //cout << x << ' ' << y << endl;
         if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
         {
             if(eventchuot.button.button == SDL_BUTTON_LEFT)
@@ -97,6 +73,8 @@ int main(int argc, char* argv[])
         SDL_PollEvent(&eventchuot);
         SDL_GetMouseState(&x, &y);
         cout << x << ' ' << y << endl;
+        graphics.prepareScene(menu);
+        graphics.presentScene();
         if(eventchuot.type == SDL_QUIT)
         {
             quit = false;
@@ -120,8 +98,6 @@ int main(int argc, char* argv[])
                                 break;
                             }
                         }
-                        graphics.prepareScene(menu);
-                        graphics.presentScene();
                         break;
                     case 1:
                         graphics.prepareScene(topscore);
@@ -133,8 +109,6 @@ int main(int argc, char* argv[])
                                 break;
                             }
                         }
-                        graphics.prepareScene(menu);
-                        graphics.presentScene();
                         break;
                 }
             }
