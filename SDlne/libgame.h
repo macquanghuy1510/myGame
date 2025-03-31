@@ -371,52 +371,6 @@ struct Snake
         }
         return false;
     }
-    bool askToPlayAgain()
-    {
-        backgroundMusic();
-        SDL_SetRenderDrawColor(graphics.renderer, 0, 0, 0, 255);
-        SDL_RenderClear(graphics.renderer);
-        SDL_Texture* background = graphics.loadTexture("background.jpg");
-        graphics.prepareScene(background);
-        SDL_Texture* button = graphics.loadTexture("buttonstartgame (1)thugon.PNG");
-        graphics.renderTexture(button, 340, 242);
-        graphics.renderTexture(button, 340, 382);
-        TTF_Font* font = graphics.loadFont("Purisa-BoldOblique.ttf", 40);
-        SDL_Color color = {204, 49, 61, 255};
-        SDL_Texture* question = graphics.renderText("Do you want to play again?", font, color);
-        SDL_Texture* ansY = graphics.renderText("YES", font, color);
-        SDL_Texture* ansN = graphics.renderText("NO", font, color);
-        graphics.renderTexture(question, 130, 150);
-        graphics.renderTexture(ansY, 390, 260);
-        graphics.renderTexture(ansN, 400, 400);
-        graphics.presentScene();
-        int x, y;
-        SDL_Event eventchuot;
-        while(true)
-        {
-            SDL_PollEvent(&eventchuot);
-            SDL_GetMouseState(&x, &y);
-            if(eventchuot.type == SDL_QUIT)
-            {
-                break;
-            }
-            else if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
-            {
-                if(eventchuot.button.button == SDL_BUTTON_LEFT)
-                {
-                    if(x > 340 && x < 525 && y > 242 && y < 327) return true;
-                    if(x > 340 && x < 525 && y > 382 && y < 467) return false;
-                }
-            }
-            SDL_Delay(100);
-        }
-        SDL_DestroyTexture(background);
-        SDL_DestroyTexture(button);
-        SDL_DestroyTexture(question);
-        SDL_DestroyTexture(ansY);
-        SDL_DestroyTexture(ansN);
-        TTF_CloseFont(font);
-    }
     void reset()
     {
         food.x = 600;
