@@ -31,9 +31,11 @@ struct Snake
     SDL_Texture* menu;
     SDL_Texture* rulegame;
     SDL_Texture* topscore;
+    SDL_Texture* congra;
     Mix_Chunk* eatsound;
     Mix_Chunk* gameoversound;
     Mix_Chunk* switchsound;
+    Mix_Chunk* soundcongra;
     Mix_Music* nhacnen;
 
     void loadAllTexture()
@@ -45,9 +47,11 @@ struct Snake
         menu = graphics.loadTexture("START.png");
         rulegame = graphics.loadTexture("RuleGame.png");
         topscore = graphics.loadTexture("TopScore.png");
+        congra = graphics.loadTexture("congratulations.png");
         eatsound = graphics.loadSound("applebitesound.mp3");
         gameoversound = graphics.loadSound("gameoversound1.mp3");
         switchsound = graphics.loadSound("soundswitch.wav");
+        soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
         nhacnen = graphics.loadMusic("backgroundmusic.mp3");
     }
     void initMap()
@@ -198,14 +202,11 @@ struct Snake
     }
     void soundWhenNewRecord()
     {
-        SDL_Texture* congra = graphics.loadTexture("congratulations.png");
-        Mix_Chunk* soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
         graphics.prepareScene(congra);
         graphics.presentScene();
         graphics.playChunk(soundcongra);
+        Mix_VolumeChunk(soundcongra, MIX_MAX_VOLUME / 3);
         SDL_Delay(6000);
-        SDL_DestroyTexture(congra);
-        Mix_FreeChunk(soundcongra);
     }
     void backgroundMusic()
     {
@@ -257,7 +258,7 @@ struct Snake
             record[1] = scores;
             check= true;
         }
-        else if(scores > record[2] && scores != record[1])
+        else if(scores > record[2] && scores != record[1] && scores != record[0])
         {
             record[2] = scores;
             check = true;
@@ -370,31 +371,6 @@ struct Snake
         }
         return false;
     }
-    bool clickToStart()
-    {
-        SDL_Event e;
-        bool check = false;
-        bool quit = true;
-        int x, y;
-        while(quit)
-        {
-            if(SDL_PollEvent(&e))
-            {
-                SDL_GetMouseState(&x, &y);
-                switch(e.type)
-                {
-                    case SDL_MOUSEBUTTONDOWN:
-                        if(e.button.button == SDL_BUTTON_LEFT && x > 265 && x < 634 && y > 200 && y < 391)
-                        {
-                            check = true;
-                            quit = false;
-                            break;
-                        }
-                }
-            }
-        }
-        return check;
-    }
     bool askToPlayAgain()
     {
         backgroundMusic();
@@ -502,7 +478,7 @@ struct Snake
         else if(direction == "up") turnup();
         else turndown();
     }
-    void playGame()
+    void snakeRun()
     {
         Mix_HaltMusic();
         initMap();
@@ -543,12 +519,58 @@ struct Snake
             graphics.presentScene();
         }
     }
+    void playGame(int x, int y)
+    {
+        switch(clickMouseEvent(x, y))
+        {
+            case 0:
+                snakeRun();
+                break;
+            case 2:
+                renderRule();
+                while(true)
+                    if(clickOnBack1())
+                        break;
+                break;
+            case 1:
+                renderTopScore();
+                while(true)
+                    if(clickOnBack2())
+                        break;
+                break;
+        }
+    }
+    void mainLoopGame()
+    {
+        SDL_Event eventchuot;
+        int x, y;
+        bool quit = true;
+        while(quit)
+        {
+            SDL_PollEvent(&eventchuot);
+            SDL_GetMouseState(&x, &y);
+            menuGame();
+            if(eventchuot.type == SDL_QUIT)
+            {
+                quit = false;
+                break;
+            }
+            else if(eventchuot.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if(eventchuot.button.button == SDL_BUTTON_LEFT)
+                {
+                    playGame(x, y);
+                }
+            }
+        }
+    }
     void destroyAllTexture()
     {
         Mix_FreeMusic(nhacnen);
         Mix_FreeChunk(eatsound);
         Mix_FreeChunk(gameoversound);
         Mix_FreeChunk(switchsound);
+        Mix_FreeChunk(soundcongra);
         SDL_DestroyTexture(imgdau);
         SDL_DestroyTexture(imgthan);
         SDL_DestroyTexture(imgfood);
@@ -556,6 +578,7 @@ struct Snake
         SDL_DestroyTexture(menu);
         SDL_DestroyTexture(rulegame);
         SDL_DestroyTexture(topscore);
+        SDL_DestroyTexture(congra);
     }
 };
 
