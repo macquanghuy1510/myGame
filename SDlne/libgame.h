@@ -18,7 +18,7 @@ struct Snake
 {
     vector<SDL_Rect> node;
     string direction = "right";
-    SDL_Rect food = {600, 150, SIZE, SIZE};
+    SDL_Rect food = {DEFAULT_X_FOOD, DEFAULT_Y_FOOD, SIZE, SIZE};
     double angle = 0;
     int scores = 0;
     int stepX = 0;
@@ -36,6 +36,7 @@ struct Snake
     Mix_Chunk* gameoversound;
     Mix_Chunk* switchsound;
     Mix_Chunk* soundcongra;
+    Mix_Chunk* soundclickmouse;
     Mix_Music* nhacnen;
 
     void loadAllTexture()
@@ -52,6 +53,7 @@ struct Snake
         gameoversound = graphics.loadSound("gameoversound1.mp3");
         switchsound = graphics.loadSound("soundswitch.wav");
         soundcongra = graphics.loadSound("subway-surfers-new-record.mp3");
+        soundclickmouse = graphics.loadSound("soundclickmouse.mp3");
         nhacnen = graphics.loadMusic("backgroundmusic.mp3");
     }
     void initMap()
@@ -61,10 +63,10 @@ struct Snake
     void initSnake()
     {
         node.resize(INIT_LEN);
-        node[0] = {180, 150, SIZE, SIZE};
+        node[0] = {DEFAULT_X_SNAKE, DEFAULT_Y_SNAKE, SIZE, SIZE};
         for(int i = 1; i < INIT_LEN; i++)
         {
-            node[i] = {node[i - 1].x - SIZE, 150, SIZE, SIZE};
+            node[i] = {node[i - 1].x - SIZE, DEFAULT_Y_SNAKE, SIZE, SIZE};
         }
         for(int i = 0; i < INIT_LEN; i++)
         {
@@ -87,8 +89,8 @@ struct Snake
         int x, y;
         do
         {
-            x = rand() % 28 + 1;
-            y = rand() % 18 + 1;
+            x = rand() % ROWS + 1;
+            y = rand() % COLS + 1;
         } while(!checkIndexOfFood(x, y));
         food.x = x * SIZE;
         food.y = y * SIZE;
@@ -139,6 +141,24 @@ struct Snake
         graphics.presentScene();
         TTF_CloseFont(font);
     }
+    void renderEdgeOfButton(int x, int y)
+    {
+        if(x > START_X && x < START_X + START_W &&
+           y > START_Y && y < START_Y + START_H)
+        {
+            graphics.drawRec(START_X, START_Y, START_W, START_H);
+        }
+        else if(x > HIGHSCORE_X && x < HIGHSCORE_X + HIGHSCORE_W &&
+           y > HIGHSCORE_Y && y < HIGHSCORE_Y + HIGHSCORE_H)
+        {
+            graphics.drawRec(HIGHSCORE_X, HIGHSCORE_Y, HIGHSCORE_W, HIGHSCORE_H);
+        }
+        else if(x > HOWTOPLAY_X && x < HOWTOPLAY_X + HOWTOPLAY_W &&
+           y > HOWTOPLAY_Y && y < HOWTOPLAY_Y + HOWTOPLAY_H)
+        {
+            graphics.drawRec(HOWTOPLAY_X, HOWTOPLAY_Y, HOWTOPLAY_W, HOWTOPLAY_H);
+        }
+    }
     bool ateFood()
     {
         int a = node[0].x + SIZE / 2;
@@ -179,8 +199,8 @@ struct Snake
         SDL_Color color = {227, 180, 72, 255};
         SDL_Texture* score = graphics.renderText(tmp1, font, color);
         SDL_Texture* SCORES = graphics.renderText("Scores: ", font, color);
-        graphics.renderTexture(SCORES, 0, -8);
-        graphics.renderTexture(score, 145, -8);
+        graphics.renderTexture(SCORES, SCORES_POS_X, SCORES_POS_Y);
+        graphics.renderTexture(score, score_POS_X, score_POS_Y);
         TTF_CloseFont(font);
         SDL_DestroyTexture(score);
         SDL_DestroyTexture(SCORES);
@@ -193,7 +213,7 @@ struct Snake
     {
         graphics.playChunk(gameoversound);
         Mix_VolumeChunk(gameoversound, MIX_MAX_VOLUME / 3);
-        SDL_Delay(4000);
+        SDL_Delay(TimeOfSoundGameOver);
     }
     void soundWhenSwitch()
     {
@@ -206,7 +226,11 @@ struct Snake
         graphics.presentScene();
         graphics.playChunk(soundcongra);
         Mix_VolumeChunk(soundcongra, MIX_MAX_VOLUME / 3);
-        SDL_Delay(6000);
+        SDL_Delay(TimeOfSoundNewRecord);
+    }
+    void soundWhenClickMouse()
+    {
+        graphics.playChunk(soundclickmouse);
     }
     void backgroundMusic()
     {
@@ -219,10 +243,10 @@ struct Snake
     }
     bool isGameOver()
     {
-        if(node[0].y < 30 && angle == 270 ||
-           node[0].y + 30 > 570 && angle == 90 ||
-           node[0].x < 30 && angle == 180 ||
-           node[0].x + 30 > 870 && angle == 0)
+        if(node[0].y < SIZE && angle == 270 ||
+           node[0].y + SIZE > SCREEN_HEIGHT - SIZE && angle == 90 ||
+           node[0].x < SIZE && angle == 180 ||
+           node[0].x + SIZE > SCREEN_WIDTH - SIZE && angle == 0)
             return true;
         int a = node[0].x + SIZE / 2;
         int b = node[0].y + SIZE / 2;
@@ -263,8 +287,6 @@ struct Snake
             record[2] = scores;
             check = true;
         }
-        for(int i : record) cout << i << ' ';
-        cout << endl;
         myfile.close();
         myfile.open("data.txt", ios::out | ios::trunc);
         char c = ' ';
@@ -329,9 +351,15 @@ struct Snake
     }
     int clickMouseEvent(int x, int y)
     {
-        if(x > 325 && x < 579 && y > 66 && y < 166) return 0;
-        if(x > 220 && x < 695 && y > 238 && y < 338) return 1;
-        if(x > 180 && x < 730 && y > 411 && y < 511) return 2;
+        if(x > START_X && x < START_X + START_W &&
+           y > START_Y && y < START_Y + START_H)
+            return 0;
+        if(x > HIGHSCORE_X && x < HIGHSCORE_X + HIGHSCORE_W &&
+           y > HIGHSCORE_Y && y < HIGHSCORE_Y + HIGHSCORE_H)
+            return 1;
+        if(x > HOWTOPLAY_X && x < HOWTOPLAY_X + HOWTOPLAY_W &&
+           y > HOWTOPLAY_Y && y < HOWTOPLAY_Y + HOWTOPLAY_H)
+            return 2;
     }
     bool clickOnBack1()
     {
@@ -345,10 +373,13 @@ struct Snake
             {
                 if(eventchuot.button.button == SDL_BUTTON_LEFT)
                 {
-                    if(x > 180 && x < 420 && y > 473 && y < 573) return true;
+                    if(x > BACK1_X && x < BACK1_X + BACK_W && y > BACK1_Y && y < BACK1_Y + BACK_H)
+                    {
+                        soundWhenClickMouse();
+                        return true;
+                    }
                 }
             }
-            SDL_Delay(100);
         }
         return false;
     }
@@ -364,19 +395,22 @@ struct Snake
             {
                 if(eventchuot.button.button == SDL_BUTTON_LEFT)
                 {
-                    if(x > 469 && x < 709 && y > 465 && y < 565) return true;
+                    if(x > BACK2_X && x < BACK2_X + BACK_W && y > BACK2_Y && y < BACK2_Y + BACK_H)
+                    {
+                        soundWhenClickMouse();
+                        return true;
+                    }
                 }
             }
-            SDL_Delay(100);
         }
         return false;
     }
     void reset()
     {
-        food.x = 600;
-        food.y = 150;
-        node[0].x = 180;
-        node[0].y = 150;
+        food.x = DEFAULT_X_FOOD;
+        food.y = DEFAULT_Y_FOOD;
+        node[0].x = DEFAULT_X_SNAKE;
+        node[0].y = DEFAULT_Y_SNAKE;
         direction = "right";
         scores = 0;
     }
@@ -473,20 +507,23 @@ struct Snake
             graphics.presentScene();
         }
     }
-    void playGame(int x, int y)
+    void controlStatusOfGame(int x, int y)
     {
         switch(clickMouseEvent(x, y))
         {
             case 0:
+                soundWhenClickMouse();
                 snakeRun();
                 break;
             case 2:
+                soundWhenClickMouse();
                 renderRule();
                 while(true)
                     if(clickOnBack1())
                         break;
                 break;
             case 1:
+                soundWhenClickMouse();
                 renderTopScore();
                 while(true)
                     if(clickOnBack2())
@@ -504,6 +541,7 @@ struct Snake
             SDL_PollEvent(&eventchuot);
             SDL_GetMouseState(&x, &y);
             menuGame();
+            renderEdgeOfButton(x, y);
             if(eventchuot.type == SDL_QUIT)
             {
                 quit = false;
@@ -513,7 +551,7 @@ struct Snake
             {
                 if(eventchuot.button.button == SDL_BUTTON_LEFT)
                 {
-                    playGame(x, y);
+                    controlStatusOfGame(x, y);
                 }
             }
         }
@@ -525,6 +563,7 @@ struct Snake
         Mix_FreeChunk(gameoversound);
         Mix_FreeChunk(switchsound);
         Mix_FreeChunk(soundcongra);
+        Mix_FreeChunk(soundclickmouse);
         SDL_DestroyTexture(imgdau);
         SDL_DestroyTexture(imgthan);
         SDL_DestroyTexture(imgfood);
