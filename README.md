@@ -34,11 +34,12 @@
 +) file defs.h của cô.
 +) các cách thao tác với âm thanh, hình ảnh, font chữ em lấy code của cô.
 +) các phần xử lý sự kiện chuột, bàn phím em cũng học từ cô.
-+) các hàm move(), turnleft, right, down, up em cũng tham khảo trên Youtube của cô.
++) các hàm move(), turnleft(), turnright(), turndown(), turnup() em cũng tham khảo trên Youtube của cô.
 -Các nguồn lấy ảnh và âm thanh:
-+) Các ảnh em thiết kế trên Canva.
++) Các ảnh em thiết kế trên Canva hoặc tự vẽ trên Pixilart.
 +) https://pixabay.com/sound-effects/search/apple/
 +) https://www.soundsnap.com/tags/apple_bite
++) https://pixabay.com/sound-effects/search/mouse%20click/
 +) Còn một vài nguồn khác nữa em quên không ghi lại.
 -Mức độ sử dụng AI:
 +) Em có hỏi Copilot một số hàm như giảm âm lượng của nhạc, tắt nhạc, hàm render ảnh nhưng có thể xoay ảnh. Trong hàm logicOfMove() có phần newDirection là do em hỏi Copilot, vì nếu chỉ dùng mỗi direction thì nếu các tổ hợp phím như LEFT và UP quá nhanh thì con rắn sẽ quay lại và đâm chính nó.
