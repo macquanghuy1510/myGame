@@ -42,4 +42,4 @@
 +) https://pixabay.com/sound-effects/search/mouse%20click/
 +) Còn một vài nguồn khác nữa em quên không ghi lại.
 -Mức độ sử dụng AI:
-+) Em có hỏi Copilot một số hàm như giảm âm lượng của nhạc, tắt nhạc, hàm render ảnh nhưng có thể xoay ảnh. Trong hàm logicOfMove() có phần newDirection là do em hỏi Copilot, vì nếu chỉ dùng mỗi direction thì nếu các tổ hợp phím như LEFT và UP quá nhanh thì con rắn sẽ quay lại và đâm chính nó.
++) Em có hỏi Copilot một số hàm như giảm âm lượng của nhạc, tắt nhạc, hàm render ảnh nhưng có thể xoay ảnh.
